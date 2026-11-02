@@ -1,0 +1,39 @@
+# manifest.yaml — THIS addon's input declaration (contract clause 10).
+#
+# `input` maps Terraform variable names (declared in variables.tf) to bindings:
+#   - a literal (evaluated as written)
+#   - `$instance.<output>[.<key>...]`  — resolved per invocation against THIS
+#     tenant's baseline root outputs
+#   - `$addon.<addon_id>.<output>[...]` — resolved from the OTHER addon's
+#     existing statefile for this tenant (loud failure if not installed)
+#   - `!`-prefixed variants — acknowledged sensitive wiring (rides the env
+#     channel only; never on disk, never logged)
+#
+# The visibility contract: `visibility: shared` (default) makes this addon
+# consumable by any org fork; `visibility: private` + `owner_org` (this org's
+# database unique id) restricts consumption to that org (lint + audit
+# enforce; the fork-local private root flip is described in README).
+
+description: >-
+  AWS wiring for the co-selling agent (namazu-agent-apn): the outbound
+  cross-account assume permission (sts:AssumeRole + sts:SetSourceIdentity)
+  on the tenant's agent pod IRSA role, an optional in-account
+  Namazu-CoSell-Opportunity-Manager role ported from
+  namazu-apn-cloudformation's trust/permission shape, and ECR pull for the
+  agent's image/chart repositories. The agent never holds static
+  credentials; the chart install itself stays manual (see README). Inert
+  until the tenant's baseline enables it.
+visibility: shared
+input:
+  # The tenant's agent identity — facts only the tenant baseline knows.
+  # agent_role_arn is the effective role (per-tenant Bedrock role when
+  # bedrock models are enabled, else the deploy path's
+  # namazu_agent_service_account_role_arn); null when the tenant has
+  # neither, which leaves this addon inert by design.
+  agent_role_arn: $instance.namazu_agent_service_account_role_arn
+  agent_service_account_name: $instance.namazu_agent_service_account_name
+  agent_namespace: $instance.namazu_agent_service_account_namespace
+  # The whole per-tenant config, one binding: the baseline's
+  # addon_agent_apn output (object with the same shape as variables.tf's
+  # `agent_apn`). enabled=false (the default) creates nothing.
+  agent_apn: $instance.addon_agent_apn
