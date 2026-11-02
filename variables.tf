@@ -22,6 +22,15 @@ variable "agent_apn" {
     trusted_account_ids  = optional(list(string), [])
     ecr_enabled          = optional(bool, true)
     ecr_registry_account = optional(string, "308044622771")
+
+    # Set by the tenant baseline from its billing_suspended input (the
+    # zero-compute billing hold, namazu-cloud-instance PR #89) — not a
+    # tenant tfvars knob. While true the OUTBOUND and ECR policies detach
+    # from the agent role (the same detach-on-hold pattern the baseline
+    # applies to the Bedrock invocation policy) so a held tenant's identity
+    # can assume nothing; the co-sell role itself survives (its ARN is
+    # handed to the chart and must stay stable across a hold).
+    suspended = optional(bool, false)
   })
 
   default = {
@@ -31,18 +40,6 @@ variable "agent_apn" {
 
 variable "agent_role_arn" {
   description = "The tenant's namazu-agent pod IRSA role (the baseline's effective agent role: the per-tenant Bedrock role when bedrock models are enabled, else the deploy path's namazu_agent_service_account_role_arn). The outbound assume permission and ECR pull attach here. Null when the tenant has neither — the addon stays inert. Bound from the tenant baseline: $instance.namazu_agent_service_account_role_arn."
-  type        = string
-  default     = null
-}
-
-variable "agent_service_account_name" {
-  description = "The tenant's agent ServiceAccount name (documented wiring for the chart install; see README). Bound from the tenant baseline: $instance.namazu_agent_service_account_name."
-  type        = string
-  default     = null
-}
-
-variable "agent_namespace" {
-  description = "The tenant's agent namespace (documented wiring for the chart install; see README). Bound from the tenant baseline: $instance.namazu_agent_service_account_namespace."
   type        = string
   default     = null
 }

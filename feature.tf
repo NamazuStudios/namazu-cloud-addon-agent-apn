@@ -68,8 +68,13 @@ locals {
 # scoped to the ONE role this tenant's agent actually assumes (the hosting
 # account's version wildcards the role namespace because the customer
 # account varies; here the target is known, so it is exact).
+#
+# Detaches while the tenant is billing-suspended (the baseline folds
+# `suspended` into the agent_apn map): a held tenant's identity can assume
+# nothing — the same detach-on-hold the baseline applies to the Bedrock
+# invocation policy.
 resource "aws_iam_role_policy" "coselling_outbound" {
-  count = local.enabled && local.cosell_role_arn != null ? 1 : 0
+  count = local.enabled && !local.apn.suspended && local.cosell_role_arn != null ? 1 : 0
 
   name = "CosellingAgentOutboundAssumption"
   role = local.agent_role_name
@@ -98,7 +103,7 @@ resource "aws_iam_role_policy" "coselling_outbound" {
 # the namazu-main-aws-terraform / namazu-cloud-terraform side of the
 # go-live checklist, not something this addon can grant from here.
 resource "aws_iam_role_policy" "ecr_pull" {
-  count = local.enabled && local.apn.ecr_enabled ? 1 : 0
+  count = local.enabled && !local.apn.suspended && local.apn.ecr_enabled ? 1 : 0
 
   name = "CosellingAgentEcrPull"
   role = local.agent_role_name

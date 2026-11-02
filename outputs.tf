@@ -22,11 +22,6 @@ output "outbound_policy_role" {
 }
 
 output "agent_namespace" {
-  description = "The tenant's agent namespace — where the cosell chart installs (identity = tenant = namespace)."
-  value       = var.agent_namespace
-}
-
-output "agent_service_account_name" {
-  description = "The tenant's agent ServiceAccount name — the chart's serviceAccountName value."
-  value       = var.agent_service_account_name
+  description = "The tenant's agent namespace — where the cosell chart installs (identity = tenant = namespace; this addon's own namespace)."
+  value       = local.addon_namespace
 }

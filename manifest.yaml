@@ -29,11 +29,13 @@ input:
   # agent_role_arn is the effective role (per-tenant Bedrock role when
   # bedrock models are enabled, else the deploy path's
   # namazu_agent_service_account_role_arn); null when the tenant has
-  # neither, which leaves this addon inert by design.
+  # neither, which leaves this addon inert by design. (The agent
+  # ServiceAccount NAME is generated per tenant (namazu-agent-<suffix>) and
+  # is deliberately not a binding; the chart namespace is the tenant
+  # namespace itself.)
   agent_role_arn: $instance.namazu_agent_service_account_role_arn
-  agent_service_account_name: $instance.namazu_agent_service_account_name
-  agent_namespace: $instance.namazu_agent_service_account_namespace
   # The whole per-tenant config, one binding: the baseline's
   # addon_agent_apn output (object with the same shape as variables.tf's
-  # `agent_apn`). enabled=false (the default) creates nothing.
+  # `agent_apn`). enabled=false (the default) creates nothing; the
+  # baseline folds `suspended` in from its billing_suspended input.
   agent_apn: $instance.addon_agent_apn

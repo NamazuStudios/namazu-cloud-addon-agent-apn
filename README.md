@@ -43,14 +43,19 @@ Inert by design: no CI, no bootstrap, no AWS role. `enabled = false`
 | Variable | Binding | Meaning |
 |---|---|---|
 | `agent_role_arn` | `$instance.namazu_agent_service_account_role_arn` | the tenant's effective agent IRSA role (Bedrock role when bedrock models are on, else the deploy path's); null ⇒ inert |
-| `agent_service_account_name` | `$instance.namazu_agent_service_account_name` | documented wiring for the chart install |
-| `agent_namespace` | `$instance.namazu_agent_service_account_namespace` | where the chart installs (identity = tenant = namespace) |
 | `agent_apn` | `$instance.addon_agent_apn` | the whole per-tenant config (below) |
 
-All four come from **tenant baseline outputs** — the PR to
-`namazu-cloud-instance` adds them to the `per_tenant/aws/*` roots. Until a
-tenant's baseline is re-applied with those outputs, installing this addon
-for it fails loudly naming the missing output.
+Both come from **tenant baseline outputs** — the PR to `namazu-cloud-instance`
+adds them to the `per_tenant/aws/*` roots. Until a tenant's baseline is
+re-applied with those outputs, installing this addon for it fails loudly
+naming the missing output.
+
+The agent ServiceAccount name is **generated** (`namazu-agent-<random
+suffix>` — `modules/namazu_agent` uses `generate_name`), so it is not a
+binding: read it from the tenant namespace (`kubectl get sa -n <tenant>`)
+when installing the chart. The chart's namespace is the tenant namespace
+itself (identity = tenant = namespace — this addon's `agent_namespace`
+output).
 
 ## The `agent_apn` input (per-tenant config)
 
