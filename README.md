@@ -162,3 +162,18 @@ cluster-role: this addon creates IAM objects only.
 ## License
 
 MIT — see [LICENSE](LICENSE).
+
+## License & provenance
+
+**AGPL-3.0** — see [LICENSE](LICENSE).
+
+This is an **official Namazu Cloud addon** — it can be activated for a
+**fixed fee** (the activation + review process is documented in the
+[namazu-cloud-addon-example template's ADDONS.md](https://github.com/NamazuStudios/namazu-cloud-addon-example/blob/main/ADDONS.md)).
+
+The repository is made public for **transparency and visibility**: it is
+deeply connected to Namazu Cloud — the outbound-assume wiring, the
+co-sell role shape, and the ECR pull grants here are the platform's
+co-selling agent story. It is written for Namazu Studios and Namazu Cloud
+use; derivative works are expected to come back upstream to
+`NamazuStudios`, no exceptions.
