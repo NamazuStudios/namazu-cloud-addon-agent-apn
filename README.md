@@ -163,6 +163,13 @@ cluster-role: this addon creates IAM objects only.
 
 MIT — see [LICENSE](LICENSE).
 
+<p align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="aws-partner-dark.png">
+    <img src="aws-partner-light.png" alt="AWS Partner Network" width="220">
+  </picture>
+</p>
+
 ## What the co-selling agent does
 
 The co-selling agent is your **APN funding engine** — it runs the entire
@@ -199,6 +206,42 @@ its role through the tenant's own IRSA identity, and **every action is
 attributable in CloudTrail** via a per-user source identity. Catalog
 pinning keeps test deals in AWS's isolated Sandbox catalog and real deals
 in production.
+
+## Why teams run it
+
+- **Hours become minutes.** An ACE opportunity update — notes summarized,
+  evidence reviewed, fields completed, deliverables attached — used to eat
+  an afternoon. The agent turns it into a prompt and a review.
+- **Submissions that survive scrutiny.** The cost and usage models are
+  built from your real workloads and architecture, so POC and MAP
+  requests land with defensible numbers instead of optimistic guesses —
+  and defensible submissions get approved.
+- **Nothing falls through.** Deals are tracked in Namazu Cloud, in
+  parallel, with next-step recommendations and objection analysis running
+  continuously — not on the whiteboard after the call.
+- **Every artifact is client-ready.** The WAFR, the cost model, the pitch
+  deck, the Word doc — generated from the deal record, formatted for the
+  customer, archived in the opportunity.
+- **Auditability is absolute.** Every agent action is attributable in
+  CloudTrail to a named user via source identity. Your AWS partner
+  manager can trust every line.
+
+## From meeting to funded, in one flow
+
+1. **The call ends.** Drop the meeting notes into the deal record.
+2. **The agent summarizes into ACE** — stage, next steps, risks — and
+   updates the opportunity score.
+3. **Evidence goes in.** Point it at your IaC, architecture docs, and
+   source; it reviews and attaches what the submission needs.
+4. **The WAFR and cost model generate** — grounded in the actual
+   workloads, sized for the POC or MAP benefit you're claiming.
+5. **The deliverables render** — PDF for the customer, Word for the
+   partner manager, deck for the review.
+6. **You submit.** The agent tracks the funding request through its
+   lifecycle while it lines up the next opportunity.
+
+That's the motion. The agent runs it as many times in parallel as you
+have deals.
 
 ## License & provenance
 
