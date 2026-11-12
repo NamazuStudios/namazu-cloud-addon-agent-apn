@@ -165,6 +165,8 @@ MIT — see [LICENSE](LICENSE).
 
 ## What the co-selling agent does
 
+> The integration map — what the agent connects and why — lives in **[INTEGRATION.md](INTEGRATION.md)**.
+
 The co-selling agent is your **APN funding engine** — it runs the entire
 Partner Central co-sell motion so you never have to touch the APN console:
 
