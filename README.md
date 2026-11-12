@@ -40,15 +40,19 @@ Inert by design: no CI, no bootstrap, no AWS role. `enabled = false`
 
 ## What it reads (manifest.yaml bindings)
 
-| Variable | Binding | Meaning |
+| Variable | Source | Meaning |
 |---|---|---|
 | `agent_role_arn` | `$instance.namazu_agent_service_account_role_arn` | the tenant's effective agent IRSA role (Bedrock role when bedrock models are on, else the deploy path's); null ⇒ inert |
-| `agent_apn` | `$instance.addon_agent_apn` | the whole per-tenant config (below) |
+| `agent_apn` | fork matrix `--contract agent_apn='{...}'` | the whole per-tenant config (below) |
 
-Both come from **tenant baseline outputs** — the PR to `namazu-cloud-instance`
-adds them to the `per_tenant/aws/*` roots. Until a tenant's baseline is
-re-applied with those outputs, installing this addon for it fails loudly
-naming the missing output.
+`agent_role_arn` reads a **tenant baseline output** — a generic platform
+fact that exists regardless of this addon. The `agent_apn` config
+deliberately does NOT flow through the baseline anymore:
+namazu-cloud-instance#130 removes the `addon_agent_apn` variable/output
+entirely — the consuming org fork's `sync.yml` matrix entry is the request
+AND the config, delivered through the runner's `contract` action input
+(namazu-cloud-addon-runner#4). Until a tenant's baseline is re-applied,
+the role-arn binding fails loudly naming the missing output.
 
 The agent ServiceAccount name is **generated** (`namazu-agent-<random
 suffix>` — `modules/namazu_agent` uses `generate_name`), so it is not a
@@ -57,10 +61,13 @@ when installing the chart. The chart's namespace is the tenant namespace
 itself (identity = tenant = namespace — this addon's `agent_namespace`
 output).
 
-## The `agent_apn` input (per-tenant config)
+## The `agent_apn` input (per-tenant config, via `--contract`)
+
+The config is one JSON object passed by the consuming fork's matrix entry
+(the runner forwards each line as `--contract agent_apn='...'`):
 
 ```hcl
-addon_agent_apn = {
+agent_apn = {
   enabled             = true
   create_role         = true                  # or consume_role_arn = "arn:..."
   role_name           = "Namazu-CoSell-Opportunity-Manager"
