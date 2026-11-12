@@ -61,6 +61,28 @@ when installing the chart. The chart's namespace is the tenant namespace
 itself (identity = tenant = namespace — this addon's `agent_namespace`
 output).
 
+## Account-wide names — the org qualification rule
+
+IAM role names and the co-sell role are **account-wide** (IAM ARNs are
+global), and the shared hosting account hosts every org. Where this addon
+creates a NAMED IAM object, the name must be org-distinct:
+
+- `role_name` (the optional in-account `Namazu-CoSell-Opportunity-Manager`
+  role, `create_role = true`): the default matches
+  namazu-apn-cloudformation's template name — only ONE org per account can
+  use the default. Orgs sharing the account MUST set an org-distinct
+  `role_name` via `--contract` (e.g.
+  `role_name='Namazu-CoSell-Opportunity-Manager-<org-slug>'`), and the
+  consuming fork's `CosellRoleCreate` grant must scope to that name. The
+  outbound-assume path (the tenant's agent IRSA role policy) needs no
+  qualification — that role is the tenant's own, named by the baseline.
+- ECR pull (`ecr_enabled`): scoped to the org-namespaced repositories
+  (`<org-id>/...`) — nothing account-wide.
+
+Rule of thumb (matches the catalog's qualification story): IAM is global,
+so the ORG ID in the NAME is the qualifier; regional services get
+region-scoped ARNs.
+
 ## The `agent_apn` input (per-tenant config, via `--contract`)
 
 The config is one JSON object passed by the consuming fork's matrix entry
