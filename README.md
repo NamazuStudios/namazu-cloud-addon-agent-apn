@@ -163,13 +163,6 @@ cluster-role: this addon creates IAM objects only.
 
 MIT — see [LICENSE](LICENSE).
 
-<p align="center">
-  <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="aws-partner-dark.png">
-    <img src="aws-partner-light.png" alt="AWS Partner Network" width="220">
-  </picture>
-</p>
-
 ## What the co-selling agent does
 
 The co-selling agent is your **APN funding engine** — it runs the entire
