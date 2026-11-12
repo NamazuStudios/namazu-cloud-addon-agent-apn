@@ -1,7 +1,7 @@
 # namazu-cloud-addon-agent-apn
 
 AWS wiring for the **co-selling agent**
-([namazu-agent-apn](https://github.com/NamazuStudios/namazu-agent-apn) —
+(namazu-agent-apn —
 the AWS Partner Central assistant), as a per-tenant addon. It is the
 tenant-account half of what
 [namazu-main-aws-terraform#14](https://github.com/NamazuStudios/namazu-main-aws-terraform/issues/14)
