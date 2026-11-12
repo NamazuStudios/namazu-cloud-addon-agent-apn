@@ -163,6 +163,43 @@ cluster-role: this addon creates IAM objects only.
 
 MIT — see [LICENSE](LICENSE).
 
+## What the co-selling agent does
+
+The co-selling agent is your **APN funding engine** — it runs the entire
+Partner Central co-sell motion so you never have to touch the APN console:
+
+- **Authors and manages every APN ACE Opportunity end to end** — no direct
+  APN access required, no tab-switching, no console gymnastics. The agent
+  works the [APN Customer Engagements (ACE) program](https://aws.amazon.com/partners/selling/ace/)
+  directly, at every stage, for every deal.
+- **Reviews your evidence like a partner development manager**:
+  infrastructure code, architecture documents, application source code —
+  then writes the opportunity up properly.
+- **Generates WAFRs for funding submissions** — Well-Architected reviews
+  grounded in your actual workloads, aligned to the
+  [AWS Well-Architected Framework](https://aws.amazon.com/well-architected/),
+  not filled in from a template.
+- **Estimates cloud usage and costs** for accurate, defensible
+  [AWS Partner funding](https://aws.amazon.com/partners/partner-funding/)
+  submissions — **POC, MAP, and every other funding benefit** — so your
+  requests survive scrutiny and get approved.
+- **Tracks deals in Namazu Cloud — multiple at a time** — every
+  opportunity, every stage, one dashboard, nothing falling through.
+- **Turns meeting notes into ACE** — analyzes call and meeting notes and
+  summarizes them straight into the opportunity record.
+- **Produces the deliverables**: PDFs, Word documents, pitch decks, and
+  more — client-ready, generated from the deal record.
+
+And beyond the paperwork: it **optimizes opportunity scores**, recommends
+**next steps**, provides **sales guidance**, runs **objection analysis**,
+and much more. Your partner development manager that never sleeps.
+
+Trust is built in: the agent never holds static credentials, it assumes
+its role through the tenant's own IRSA identity, and **every action is
+attributable in CloudTrail** via a per-user source identity. Catalog
+pinning keeps test deals in AWS's isolated Sandbox catalog and real deals
+in production.
+
 ## License & provenance
 
 **AGPL-3.0** — see [LICENSE](LICENSE).
