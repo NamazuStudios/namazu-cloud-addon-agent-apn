@@ -79,6 +79,20 @@ fork's IAM grants, and the chart install — is documented step by step in
 credentials, IRSA-only identity, and every action attributable in
 CloudTrail to a named user.
 
-## License
+## License & provenance
 
-MIT — see [LICENSE](LICENSE).
+**AGPL-3.0** — see [LICENSE](LICENSE). This is an **official Namazu Cloud
+addon** — it can be activated for a **fixed fee**; Namazu Studios can also
+author a custom addon for a fee scoped to the work required. The
+repository is made public for **transparency and visibility**; derivative
+works are expected to come back upstream to `NamazuStudios`, no
+exceptions.
+
+## AGPL waiver for delivered work
+
+Namazu Studios, as the copyright holder, **waives all AGPL obligations for
+software installed through a purchase or other business arrangement
+between Namazu Studios and the client.** The AGPL terms above govern the
+code as published in this repository; work delivered to you under
+contract is delivered under that agreement, not under the license's
+reciprocity terms.
