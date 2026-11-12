@@ -24,6 +24,7 @@ description: >-
   credentials; the chart install itself stays manual (see README). Inert
   until the tenant's baseline enables it.
 visibility: shared
+display: Co-Selling Agent (APN)
 input:
   # The tenant's agent identity — facts only the tenant baseline knows.
   # agent_role_arn is the effective role (per-tenant Bedrock role when
