@@ -1,178 +1,17 @@
 # namazu-cloud-addon-agent-apn
 
-AWS wiring for the **co-selling agent**
-(namazu-agent-apn —
-the AWS Partner Central assistant), as a per-tenant addon. It is the
-tenant-account half of what
-[namazu-main-aws-terraform#14](https://github.com/NamazuStudios/namazu-main-aws-terraform/issues/14)
-and
-[namazu-apn-cloudformation](https://github.com/NamazuStudios/namazu-apn-cloudformation)
-do for the hosting account:
+<div align="center">
+  <img src="https://raw.githubusercontent.com/NamazuStudios/namazu-cloud-addon/main/aws-partner-light.png" alt="AWS Partner Network" width="220">
+</div>
 
-1. **The outbound assume permission** — `sts:AssumeRole` +
-   `sts:SetSourceIdentity` on the co-sell role, attached to the tenant's
-   agent pod IRSA role (the baseline's effective agent role). The agent
-   never holds static AWS credentials; it assumes its target role with its
-   ambient cluster identity, presenting a per-user `sts:SourceIdentity`
-   that must match the role's `AuthorizedUser` tag — that match is what
-   makes every action attributable in CloudTrail.
-2. **Optionally the co-sell role itself** (`create_role = true`), ported
-   1:1 from `namazu-apn-cloudformation`'s `opportunity-manager-role.yaml`:
-   trust pinned to the agent role (+ optional account roots), the
-   `partnercentral:*` action surface, optional `ExternalId` /
-   `RoleSessionName` pins and catalog pin (`Sandbox` = AWS's isolated test
-   catalog, `AWS` = production deals). Use this when the tenant's own
-   account owns the Partner Central relationship; otherwise the account
-   owner runs the cloudformation template and the tenant consumes the ARN
-   (`consume_role_arn`).
-3. **ECR pull** for the agent's image/chart repositories
-   (`namazu-agent-apn`, `namazu-agent-apn-helm`) on the same agent role —
-   the pod's runtime `helm install` authenticates with its IRSA identity.
-   Cross-account pull also needs the hosting account's repository policies
-   to grant the tenant account pull (the go-live checklist's
-   namazu-main-aws-terraform / namazu-cloud-terraform side — not grantable
-   from here).
-
-One repo = one addon = one Terraform root (contract:
-[`tenant-addons-plan.md`](https://github.com/NamazuStudios/namazu-cloud-instance/blob/main/tenant-addons-plan.md)).
-Inert by design: no CI, no bootstrap, no AWS role. `enabled = false`
-(the default) creates nothing.
-
-## What it reads (manifest.yaml bindings)
-
-| Variable | Source | Meaning |
-|---|---|---|
-| `agent_role_arn` | `$instance.namazu_agent_service_account_role_arn` | the tenant's effective agent IRSA role (Bedrock role when bedrock models are on, else the deploy path's); null ⇒ inert |
-| `agent_apn` | fork matrix `--contract agent_apn='{...}'` | the whole per-tenant config (below) |
-
-`agent_role_arn` reads a **tenant baseline output** — a generic platform
-fact that exists regardless of this addon. The `agent_apn` config
-deliberately does NOT flow through the baseline anymore:
-namazu-cloud-instance#130 removes the `addon_agent_apn` variable/output
-entirely — the consuming org fork's `sync.yml` matrix entry is the request
-AND the config, delivered through the runner's `contract` action input
-(namazu-cloud-addon-runner#4). Until a tenant's baseline is re-applied,
-the role-arn binding fails loudly naming the missing output.
-
-The agent ServiceAccount name is **generated** (`namazu-agent-<random
-suffix>` — `modules/namazu_agent` uses `generate_name`), so it is not a
-binding: read it from the tenant namespace (`kubectl get sa -n <tenant>`)
-when installing the chart. The chart's namespace is the tenant namespace
-itself (identity = tenant = namespace — this addon's `agent_namespace`
-output).
-
-## Account-wide names — the org qualification rule
-
-IAM role names and the co-sell role are **account-wide** (IAM ARNs are
-global), and the shared hosting account hosts every org. Where this addon
-creates a NAMED IAM object, the name must be org-distinct:
-
-- `role_name` (the optional in-account `Namazu-CoSell-Opportunity-Manager`
-  role, `create_role = true`): the default matches
-  namazu-apn-cloudformation's template name — only ONE org per account can
-  use the default. Orgs sharing the account MUST set an org-distinct
-  `role_name` via `--contract` (e.g.
-  `role_name='Namazu-CoSell-Opportunity-Manager-<org-slug>'`), and the
-  consuming fork's `CosellRoleCreate` grant must scope to that name. The
-  outbound-assume path (the tenant's agent IRSA role policy) needs no
-  qualification — that role is the tenant's own, named by the baseline.
-- ECR pull (`ecr_enabled`): scoped to the org-namespaced repositories
-  (`<org-id>/...`) — nothing account-wide.
-
-Rule of thumb (matches the catalog's qualification story): IAM is global,
-so the ORG ID in the NAME is the qualifier; regional services get
-region-scoped ARNs.
-
-## The `agent_apn` input (per-tenant config, via `--contract`)
-
-The config is one JSON object passed by the consuming fork's matrix entry
-(the runner forwards each line as `--contract agent_apn='...'`):
-
-```hcl
-agent_apn = {
-  enabled             = true
-  create_role         = true                  # or consume_role_arn = "arn:..."
-  role_name           = "Namazu-CoSell-Opportunity-Manager"
-  source_identity     = "peter"               # = the role's AuthorizedUser
-  external_id         = null                  # optional extra pin
-  session_name_pin    = false                 # strict "<user>-session" pin
-  catalog             = "Sandbox"             # Sandbox | AWS | null
-  resource_scope      = "*"
-  trusted_account_ids = []                    # extra account-root principals
-  ecr_enabled         = true
-  ecr_registry_account = "308044622771"
-}
-```
-
-## The chart install (manual, by design)
-
-The agent image + chart publish to their own ECR repos; the chart registers
-a PodTemplate conductor discovers and dispatches against — nothing runs
-until a job is dispatched. Install into the workspace namespace using this
-addon's outputs:
-
-```bash
-terraform output -raw cosell_role_arn     # → aws.roleArn
-terraform output -raw source_identity     # → aws.sourceIdentity
-terraform output -raw external_id         # → aws.externalId (when set)
-
-helm install cosell \
-  oci://308044622771.dkr.ecr.us-east-1.amazonaws.com/namazu-agent-apn-helm/namazu-agent-apn-helm \
-  --version "0.1.0-<sha>" \
-  --namespace <agent_namespace output> \
-  --set aws.enabled=true \
-  --set aws.roleArn="..." --set aws.externalId="..." \
-  --set aws.sourceIdentity="..." --set aws.catalog=Sandbox \
-  --set serviceAccountName="<agent_service_account_name output>"
-```
-
-Verify by exec'ing in and running `aws sts get-caller-identity` — it must
-show the assumed co-sell role ARN and the source identity.
-
-## What the consuming org fork needs
-
-`iam.policy.json` (feature grants, merged onto the executor role by the
-fork's `bootstrap/`):
-
-```json
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    { "Sid": "EcrAuthToken", "Effect": "Allow",
-      "Action": ["ecr:GetAuthorizationToken"], "Resource": "*" },
-    { "Sid": "AgentRolePolicyWrite", "Effect": "Allow",
-      "Action": ["iam:GetRole", "iam:PutRolePolicy", "iam:GetRolePolicy", "iam:DeleteRolePolicy"],
-      "Resource": ["arn:aws:iam::<account>:role/<agent role name>"] },
-    { "Sid": "CosellRoleCreate", "Effect": "Allow",
-      "Action": ["iam:CreateRole", "iam:DeleteRole", "iam:TagRole", "iam:UntagRole",
-                 "iam:PutRolePolicy", "iam:GetRolePolicy", "iam:DeleteRolePolicy", "iam:GetRole"],
-      "Resource": ["arn:aws:iam::<account>:role/Namazu-CoSell-Opportunity-Manager*"] }
-  ]
-}
-```
-
-(Drop the `CosellRoleCreate` statement when the tenant only consumes an
-existing role. `ecr:GetAuthorizationToken` is required by the contract
-`30-providers.tf` itself — its helm ECR registry block does a plan-time
-token fetch.)
-
-`bootstrap/rbac.yaml` — no additions beyond the template's default
-cluster-role: this addon creates IAM objects only.
-
-## License
-
-MIT — see [LICENSE](LICENSE).
+**Your APN funding engine.** The co-selling agent runs your entire AWS
+Partner Central motion — so you never touch the APN console.
 
 ## What the co-selling agent does
 
-> The integration map — what the agent connects and why — lives in **[INTEGRATION.md](INTEGRATION.md)**.
-
-The co-selling agent is your **APN funding engine** — it runs the entire
-Partner Central co-sell motion so you never have to touch the APN console:
-
 - **Authors and manages every APN ACE Opportunity end to end** — no direct
-  APN access required, no tab-switching, no console gymnastics. The agent
-  works the [APN Customer Engagements (ACE) program](https://aws.amazon.com/partners/selling/ace/)
+  APN access required, no tab-switching, no console gymnastics. It works
+  the [APN Customer Engagements (ACE) program](https://aws.amazon.com/partners/selling/ace/)
   directly, at every stage, for every deal.
 - **Reviews your evidence like a partner development manager**:
   infrastructure code, architecture documents, application source code —
@@ -183,24 +22,17 @@ Partner Central co-sell motion so you never have to touch the APN console:
   not filled in from a template.
 - **Estimates cloud usage and costs** for accurate, defensible
   [AWS Partner funding](https://aws.amazon.com/partners/partner-funding/)
-  submissions — **POC, MAP, and every other funding benefit** — so your
-  requests survive scrutiny and get approved.
+  submissions — **POC, MAP, and every other funding benefit**.
 - **Tracks deals in Namazu Cloud — multiple at a time** — every
   opportunity, every stage, one dashboard, nothing falling through.
-- **Turns meeting notes into ACE** — analyzes call and meeting notes and
-  summarizes them straight into the opportunity record.
+- **Turns meeting notes into ACE** — call and meeting notes summarized
+  straight into the opportunity record.
 - **Produces the deliverables**: PDFs, Word documents, pitch decks, and
   more — client-ready, generated from the deal record.
 
 And beyond the paperwork: it **optimizes opportunity scores**, recommends
 **next steps**, provides **sales guidance**, runs **objection analysis**,
 and much more. Your partner development manager that never sleeps.
-
-Trust is built in: the agent never holds static credentials, it assumes
-its role through the tenant's own IRSA identity, and **every action is
-attributable in CloudTrail** via a per-user source identity. Catalog
-pinning keeps test deals in AWS's isolated Sandbox catalog and real deals
-in production.
 
 ## Why teams run it
 
@@ -238,29 +70,15 @@ in production.
 That's the motion. The agent runs it as many times in parallel as you
 have deals.
 
-## License & provenance
+## The wiring
 
-**AGPL-3.0** — see [LICENSE](LICENSE).
+The AWS plumbing that makes all of this safe — the outbound-assume
+permission, the optional co-sell role, ECR pull, the tenant inputs, the
+fork's IAM grants, and the chart install — is documented step by step in
+**[INTEGRATION.md](INTEGRATION.md)**. Trust is built in: no static
+credentials, IRSA-only identity, and every action attributable in
+CloudTrail to a named user.
 
-Part of the [Namazu Cloud Addon system](https://github.com/NamazuStudios/namazu-cloud-addon).
+## License
 
-This is an **official Namazu Cloud addon** — it can be activated for a
-**fixed fee** (the activation + review process is documented in the
-[namazu-cloud-addon-example template's ADDONS.md](https://github.com/NamazuStudios/namazu-cloud-addon/blob/main/ADDONS.md)).
-
-The repository is made public for **transparency and visibility**: it is
-deeply connected to Namazu Cloud — the outbound-assume wiring, the
-co-sell role shape, and the ECR pull grants here are the platform's
-co-selling agent story. It is written for Namazu Studios and Namazu Cloud
-use; derivative works are expected to come back upstream to
-`NamazuStudios`, no exceptions.
-
-## AGPL waiver for delivered work
-
-Namazu Studios, as the copyright holder, **waives all AGPL obligations for
-software installed through a purchase or other business arrangement
-between Namazu Studios and the client.** The AGPL terms above govern the
-code as published in this repository; work delivered to you under
-contract — including any official addon activated for a fee or custom
-addon authored for you — is delivered under that agreement, not under the
-license's reciprocity terms.
+MIT — see [LICENSE](LICENSE).
