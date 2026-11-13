@@ -68,6 +68,12 @@ resource "helm_release" "cosell" {
   namespace  = local.addon_namespace
   # The tenant namespace IS the identity: never create another one.
   create_namespace = false
+  # NEVER wait: the chart's PVC is WaitForFirstConsumer and nothing runs
+  # until a conductor dispatch — helm --wait would block on a PVC that
+  # structurally cannot bind until a job schedules it (the 5m deadline
+  # failures, 2026-11-13).
+  wait          = false
+  wait_for_jobs = false
 
   set {
     name  = "aws.enabled"
