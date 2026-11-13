@@ -70,6 +70,17 @@ and much more. Your partner development manager that never sleeps.
 That's the motion. The agent runs it as many times in parallel as you
 have deals.
 
+## Tutorials
+
+Step-by-step use cases, each built on example prompts you send the
+agent: [getting started](tutorials/00-getting-started.md),
+[managing opportunities](tutorials/01-manage-opportunities.md),
+[meeting notes to ACE](tutorials/02-meeting-notes.md),
+[maximizing the opportunity score](tutorials/03-opportunity-score.md),
+[running a WAFR](tutorials/04-wafr.md), and
+[generating deliverables](tutorials/05-deliverables.md) — or start at
+the [tutorials overview](tutorials/README.md).
+
 ## The wiring
 
 The AWS plumbing that makes all of this safe — the outbound-assume
