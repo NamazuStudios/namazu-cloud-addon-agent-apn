@@ -1,9 +1,5 @@
 # namazu-cloud-addon-agent-apn
 
-<div align="center">
-  <img src="https://raw.githubusercontent.com/NamazuStudios/namazu-cloud-addon/main/aws-partner-light.png" alt="AWS Partner Network" width="220">
-</div>
-
 **Your APN funding engine.** The co-selling agent runs your entire AWS
 Partner Central motion — so you never touch the APN console.
 
