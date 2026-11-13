@@ -41,10 +41,12 @@ locals {
 
   # The co-sell role the agent assumes: consumed (the target account ran
   # namazu-apn-cloudformation and handed over the ARN) or created below.
-  cosell_role_arn = coalesce(
+  # null-safe: an INERT install (enabled=false, no consume arn, no create)
+  # has no co-sell role at all — coalesce must not crash the plan on it.
+  cosell_role_arn = try(coalesce(
     local.apn.consume_role_arn,
     local.apn.create_role ? aws_iam_role.cosell[0].arn : null,
-  )
+  ), null)
 
   # Trust principals: the agent pod's own role, plus any additional account
   # roots the tenant wants to be able to assume (the cloudformation default
