@@ -73,13 +73,16 @@ have deals.
 ## Tutorials
 
 Step-by-step use cases, each built on example prompts you send the
-agent: [getting started](tutorials/00-getting-started.md),
-[managing opportunities](tutorials/01-manage-opportunities.md),
-[meeting notes to ACE](tutorials/02-meeting-notes.md),
-[maximizing the opportunity score](tutorials/03-opportunity-score.md),
-[running a WAFR](tutorials/04-wafr.md), and
-[generating deliverables](tutorials/05-deliverables.md) — or start at
-the [tutorials overview](tutorials/README.md).
+agent. Read the full tutorial listing
+[here](tutorials/README.md).
+
+- [Tutorials overview](tutorials/README.md)
+- [Getting started](tutorials/00-getting-started.md)
+- [Managing opportunities](tutorials/01-manage-opportunities.md)
+- [Meeting notes to ACE](tutorials/02-meeting-notes.md)
+- [Maximizing the opportunity score](tutorials/03-opportunity-score.md)
+- [Running a WAFR](tutorials/04-wafr.md)
+- [Generating deliverables](tutorials/05-deliverables.md)
 
 ## The wiring
 
