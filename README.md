@@ -1,4 +1,6 @@
 <p align="center">
+  <a href="https://cloud.namazustudios.com"><img src="namazu-cloud.png" alt="Namazu Cloud" width="280"></a>
+  <br>
   <a href="tutorials/README.md"><img src="agent-apn.png" alt="AWS Partner"></a>
 </p>
 
