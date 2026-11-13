@@ -74,6 +74,14 @@ resource "helm_release" "cosell" {
   # failures, 2026-11-13).
   wait          = false
   wait_for_jobs = false
+  # 20 min: the provider's exec-plugin auth (`aws eks get-token` per API
+  # call, racing on the AWS CLI credential cache under the TWO concurrent
+  # workspace applies) crawls — installs observed taking well past the
+  # 300s default (the pending-install → context-deadline pattern,
+  # 2026-11-13). The chart itself installs in seconds via the plain CLI;
+  # the crawl is auth overhead, so give the action room instead of
+  # failing at the wall.
+  timeout = 1200
 
   set {
     name  = "aws.enabled"
