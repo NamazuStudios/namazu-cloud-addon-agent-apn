@@ -112,5 +112,10 @@ contract is delivered under that agreement, not under the license's
 reciprocity terms.
 
 <p align="center">
-  <a href="tutorials/README.md"><img src="agent-apn.png" alt="AWS Partner"></a>
+  <a href="tutorials/README.md">
+    <picture>
+      <source media="(prefers-color-scheme: dark)" srcset="aws-partner-dark.png">
+      <img src="aws-partner-light.png" alt="AWS Partner" width="200">
+    </picture>
+  </a>
 </p>
