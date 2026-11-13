@@ -39,31 +39,13 @@ locals {
   # aws_iam_role_policy takes a role NAME; the baseline hands us the ARN.
   agent_role_name = var.agent_role_arn != null ? element(split("/", var.agent_role_arn), length(split("/", var.agent_role_arn)) - 1) : null
 
-  # The co-sell role the agent assumes: consumed (the target account ran
-  # namazu-apn-cloudformation and handed over the ARN) or created below.
-  # null-safe: an INERT install (enabled=false, no consume arn, no create)
-  # has no co-sell role at all — coalesce must not crash the plan on it.
-  cosell_role_arn = try(coalesce(
-    local.apn.consume_role_arn,
-    local.apn.create_role ? aws_iam_role.cosell[0].arn : null,
-  ), null)
-
-  # Trust principals: the agent pod's own role, plus any additional account
-  # roots the tenant wants to be able to assume (the cloudformation default
-  # trusts the whole Namazu hosting account; per-role is tighter).
-  trusted_principals = concat(
-    [var.agent_role_arn],
-    [for id in local.apn.trusted_account_ids : "arn:aws:iam::${id}:root"],
-  )
-
-  # The trust conditions fold exactly like the template's Fn::If ladder:
-  # SourceIdentity always; ExternalId / RoleSessionName pins only when set.
-  trust_conditions = merge(
-    { "sts:SourceIdentity" = local.apn.source_identity },
-    local.apn.external_id != null ? { "sts:ExternalId" = local.apn.external_id } : {},
-    local.apn.session_name_pin ? { "sts:RoleSessionName" = "${local.apn.source_identity}-session" } : {},
-  )
+  # The co-sell role the agent assumes is OWNED BY namazu-apn-cloudformation (the
+  # account-owner artifact). The addon NEVER creates it — it consumes the
+  # ARN the consuming fork supplies. null-safe for inert installs.
+  cosell_role_arn = try(local.apn.consume_role_arn, null)
 }
+
+
 
 # The outbound assume permission — the tenant-account equivalent of
 # namazu-main-aws-terraform's CosellingAgentOutboundAssumption policy, but
@@ -138,86 +120,3 @@ resource "aws_iam_role_policy" "ecr_pull" {
   })
 }
 
-# The co-sell role itself, ported from namazu-apn-cloudformation's
-# opportunity-manager-role.yaml (trust + AuthorizedUser tag + the
-# partnercentral action surface, optional catalog pin). Accountability is
-# per named user: the trust policy only accepts sessions presenting the
-# AuthorizedUser as sts:SourceIdentity, so every action lands in CloudTrail
-# under that identity.
-resource "aws_iam_role" "cosell" {
-  count = local.enabled && local.apn.create_role && local.apn.source_identity != null ? 1 : 0
-
-  name = local.apn.role_name
-  description = join(" ", [
-    "Assumed by this tenant's namazu-agent-apn pod (source identity",
-    "${local.apn.source_identity}) to manage Partner Central co-selling",
-    "opportunities. Created by namazu-cloud-addon-agent-apn.",
-  ])
-
-  assume_role_policy = jsonencode({
-    Version = "2012-10-17"
-    Statement = [
-      {
-        Sid       = "AgentIdentityEnforcement"
-        Effect    = "Allow"
-        Principal = { AWS = local.trusted_principals }
-        Action = [
-          "sts:AssumeRole",
-          "sts:SetSourceIdentity",
-        ]
-        Condition = {
-          StringEquals = local.trust_conditions
-        }
-      },
-    ]
-  })
-
-  tags = merge(
-    local.audit_tags,
-    {
-      AuthorizedUser = local.apn.source_identity
-      ManagedBy      = "namazu-cloud-addon-agent-apn"
-    },
-  )
-
-  inline_policy {
-    name = "PartnerCentralOpportunityManagement"
-
-    policy = jsonencode({
-      Version = "2012-10-17"
-      Statement = [
-        {
-          Sid    = "AllowPartnerCentralOpportunityManagement"
-          Effect = "Allow"
-          Action = [
-            # The agent's full command surface (verified against the AWS
-            # Service Authorization Reference; the IAM action prefix is
-            # partnercentral:, distinct from the partnercentral-selling
-            # CLI/SDK namespace) — identical to the cloudformation template.
-            "partnercentral:CreateOpportunity",
-            "partnercentral:UpdateOpportunity",
-            "partnercentral:SubmitOpportunity",
-            "partnercentral:AssignOpportunity",
-            "partnercentral:AssociateOpportunity",
-            "partnercentral:DisassociateOpportunity",
-            "partnercentral:GetOpportunity",
-            "partnercentral:ListOpportunities",
-            "partnercentral:ListEngagementInvitations",
-            "partnercentral:GetEngagementInvitation",
-            "partnercentral:AcceptEngagementInvitation",
-            "partnercentral:RejectEngagementInvitation",
-            "partnercentral:GetAwsOpportunitySummary",
-            "partnercentral:ListSolutions",
-            "partnercentral:TagResource",
-            "partnercentral:UntagResource",
-            "partnercentral:ListTagsForResource",
-          ]
-          Resource = local.apn.resource_scope
-          Condition = local.apn.catalog != null && local.apn.catalog != "" ? {
-            StringEquals = { "partnercentral:Catalog" = local.apn.catalog }
-          } : null
-        },
-      ]
-    })
-  }
-}

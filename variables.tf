@@ -8,18 +8,14 @@
 # accidental install wires nothing.
 
 variable "agent_apn" {
-  description = "Per-tenant co-selling agent (namazu-agent-apn) AWS wiring. enabled=false creates nothing. consume_role_arn points at a role that already exists in the target account (created from NamazuStudios/namazu-apn-cloudformation by whoever owns that account); create_role=true instead creates the Namazu-CoSell-Opportunity-Manager role HERE from the same template's shape. source_identity is the sts:SourceIdentity every assume must present (it must equal the role's AuthorizedUser tag — that match is what makes every action attributable in CloudTrail). external_id is optional additional confused-deputy protection (sts:ExternalId pin). catalog pins the role's partnercentral permission policy to one Partner Central catalog (Sandbox = AWS's isolated test catalog, AWS = production deals); empty = no pin."
+  description = "Per-tenant co-selling agent (namazu-agent-apn) AWS wiring. enabled=false creates nothing. consume_role_arn points at the co-sell role in the target account - created from NamazuStudios/namazu-apn-cloudformation by whoever owns that account. The addon NEVER creates the role (the account-wide name collision just proved why): it attaches the outbound-assume + ECR policies to the tenant's agent role and installs the chart. source_identity is the sts:SourceIdentity every assume must present (it must equal the role's AuthorizedUser tag — that match is what makes every action attributable in CloudTrail). external_id is optional additional confused-deputy protection (sts:ExternalId pin). catalog pins the role's partnercentral permission policy to one Partner Central catalog (Sandbox = AWS's isolated test catalog, AWS = production deals); empty = no pin."
   type = object({
     enabled              = bool
-    create_role          = optional(bool, false)
     consume_role_arn     = optional(string)
-    role_name            = optional(string, "Namazu-CoSell-Opportunity-Manager")
     source_identity      = optional(string)
     external_id          = optional(string)
-    session_name_pin     = optional(bool, false)
     catalog              = optional(string)
     resource_scope       = optional(string, "*")
-    trusted_account_ids  = optional(list(string), [])
     ecr_enabled          = optional(bool, true)
     ecr_registry_account = optional(string, "308044622771")
 
