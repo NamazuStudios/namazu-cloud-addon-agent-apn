@@ -23,7 +23,7 @@ Partner Central motion — from first touchpoint to proposal draft.
 - **Estimates cloud usage and costs** for accurate, defensible
   [AWS Partner funding](https://aws.amazon.com/partners/partner-funding/)
   submissions — **POC, MAP, and every other funding benefit**.
-- **Tracks deals in Namazu Cloud — multiple at a time** — every
+- **Tracks deals in [Namazu Cloud](https://cloud.namazustudios.com) — multiple at a time** — every
   opportunity, every stage, one dashboard, nothing falling through.
 - **Turns meeting notes into ACE** — call and meeting notes summarized
   straight into the opportunity record.
@@ -43,7 +43,7 @@ and much more. Your partner development manager that never sleeps.
   built from your real workloads and architecture, so POC and MAP
   requests land with defensible numbers instead of optimistic guesses —
   and defensible submissions get approved.
-- **Nothing falls through.** Deals are tracked in Namazu Cloud, in
+- **Nothing falls through.** Deals are tracked in [Namazu Cloud](https://cloud.namazustudios.com), in
   parallel, with next-step recommendations and objection analysis running
   continuously — not on the whiteboard after the call.
 - **Every artifact is client-ready.** The WAFR, the cost model, the pitch
@@ -92,7 +92,7 @@ CloudTrail to a named user.
 
 ## License & provenance
 
-**AGPL-3.0** — see [LICENSE](LICENSE). This is an **official Namazu Cloud
+**AGPL-3.0** — see [LICENSE](LICENSE). This is an **official [Namazu Cloud](https://cloud.namazustudios.com)
 addon** — it can be activated for a **fixed fee**; Namazu Studios can also
 author a custom addon for a fee scoped to the work required. The
 repository is made public for **transparency and visibility**; derivative

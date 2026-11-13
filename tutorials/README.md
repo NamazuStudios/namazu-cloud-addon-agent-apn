@@ -1,7 +1,7 @@
 # Tutorials — the AWS co-selling agent
 
 The co-selling agent runs your AWS Partner Central motion from inside
-Namazu Cloud: it creates and updates ACE opportunities, turns meeting
+[Namazu Cloud](https://cloud.namazustudios.com): it creates and updates ACE opportunities, turns meeting
 notes into deal records, maximizes your Opportunity Quality Score, runs
 Well-Architected reviews, and generates client-ready deliverables. You
 talk to it; it does the work.
@@ -13,7 +13,7 @@ handling, and the document pipeline.
 ## The workspace
 
 The agent's workspace is a file tree you can browse and edit directly
-in the Namazu Cloud ADE file browser. The agent organizes it the same
+in the [Namazu Cloud](https://cloud.namazustudios.com) ADE file browser. The agent organizes it the same
 way every time:
 
 ```
