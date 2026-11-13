@@ -43,6 +43,63 @@ locals {
   # account-owner artifact). The addon NEVER creates it — it consumes the
   # ARN the consuming fork supplies. null-safe for inert installs.
   cosell_role_arn = try(local.apn.consume_role_arn, null)
+
+  # The cosell chart - installed by the RUNNER's terraform apply (the helm
+  # provider ships in the contract's 30-providers.tf, authenticated as the
+  # executor role; the OCI pull is why the feature grants carry
+  # EcrAuthToken). Registers a PodTemplate conductor discovers and
+  # dispatches against - nothing runs until a job is dispatched, so
+  # "installed" is safe by construction.
+  chart_enabled = (local.enabled
+    && !local.apn.suspended
+    && local.apn.chart_enabled
+    && local.apn.chart_version != ""
+    && local.cosell_role_arn != null
+  && var.agent_service_account_name != "")
+}
+
+resource "helm_release" "cosell" {
+  count = local.chart_enabled ? 1 : 0
+
+  name       = "cosell"
+  repository = "oci://${local.apn.ecr_registry_account}.dkr.ecr.${data.aws_region.current.name}.amazonaws.com/namazu-agent-apn-helm"
+  chart      = "namazu-agent-apn-helm"
+  version    = local.apn.chart_version
+  namespace  = local.addon_namespace
+  # The tenant namespace IS the identity: never create another one.
+  create_namespace = false
+
+  set {
+    name  = "aws.enabled"
+    value = "true"
+  }
+  set {
+    name  = "aws.roleArn"
+    value = local.cosell_role_arn
+  }
+  set {
+    name  = "aws.sourceIdentity"
+    value = local.apn.source_identity
+  }
+  dynamic "set" {
+    for_each = local.apn.external_id != null ? [local.apn.external_id] : []
+    content {
+      name  = "aws.externalId"
+      value = set.value
+    }
+  }
+  dynamic "set" {
+    for_each = local.apn.catalog != null ? [local.apn.catalog] : []
+    content {
+      name  = "aws.catalog"
+      value = set.value
+    }
+  }
+  set {
+    name  = "serviceAccountName"
+    value = var.agent_service_account_name
+  }
+
 }
 
 

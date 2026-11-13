@@ -19,6 +19,13 @@ variable "agent_apn" {
     ecr_enabled          = optional(bool, true)
     ecr_registry_account = optional(string, "308044622771")
 
+    # The chart install (terraform-managed): when the addon is enabled and
+    # chart_version is set, the runner's terraform apply installs the cosell
+    # chart into the tenant namespace via the helm provider (executor
+    # identity; OCI pull from the ECR chart repo).
+    chart_enabled = optional(bool, true)
+    chart_version = optional(string, "")
+
     # Set by the tenant baseline from its billing_suspended input (the
     # zero-compute billing hold, namazu-cloud-instance PR #89) — not a
     # tenant tfvars knob. While true the OUTBOUND and ECR policies detach
@@ -32,6 +39,12 @@ variable "agent_apn" {
   default = {
     enabled = false
   }
+}
+
+variable "agent_service_account_name" {
+  description = "The tenant's generated namazu-agent ServiceAccount name (namazu-agent-<suffix>) - a generic platform fact the baseline OUTPUTS (namazu_agent_service_account_name). The cosell chart's serviceAccountName: the pod identity that assumes the co-sell role."
+  type        = string
+  default     = ""
 }
 
 variable "agent_role_arn" {

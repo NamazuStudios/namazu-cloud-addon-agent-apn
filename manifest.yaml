@@ -35,6 +35,9 @@ input:
   # is deliberately not a binding; the chart namespace is the tenant
   # namespace itself.)
   agent_role_arn: $instance.namazu_agent_service_account_role_arn
+  # The tenant's generated agent ServiceAccount name (the chart's
+  # serviceAccountName) - also a generic platform fact the baseline outputs.
+  agent_service_account_name: $instance.namazu_agent_service_account_name
   # The whole per-tenant config no longer flows through the baseline: the
   # addon_agent_apn output is legacy and is being removed entirely from
   # namazu-cloud-instance (namazu-cloud-instance#130). The consuming
