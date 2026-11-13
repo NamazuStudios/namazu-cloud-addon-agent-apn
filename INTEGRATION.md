@@ -81,7 +81,7 @@ creates a NAMED IAM object, the name must be org-distinct:
 - ECR pull: scoped to the org-namespaced repositories (`<org-id>/...`) —
   nothing account-wide.
 
-## The chart install (manual, by design)
+## The chart install (terraform-managed)
 
 The agent image + chart publish to their own ECR repos; the chart
 registers a PodTemplate conductor discovers and dispatches against —
