@@ -1,9 +1,11 @@
-[![AWS Partner](agent-apn.png)](tutorials/README.md)
+<p align="center">
+  <a href="tutorials/README.md"><img src="agent-apn.png" alt="AWS Partner"></a>
+</p>
 
 # namazu-cloud-addon-agent-apn
 
 **Your APN funding engine.** The co-selling agent runs your entire AWS
-Partner Central motion — so you never touch the APN console.
+Partner Central motion.
 
 ## What the co-selling agent does
 
