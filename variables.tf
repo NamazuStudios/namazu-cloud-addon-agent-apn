@@ -33,7 +33,7 @@ variable "agent_apn" {
     # applies to the Bedrock invocation policy) so a held tenant's identity
     # can assume nothing; the co-sell role itself survives (its ARN is
     # handed to the chart and must stay stable across a hold).
-    suspended = optional(bool)
+    suspended = optional(bool, false)
 
     # Charm Hyper (the core chart's agent.hyper.*): enabled=true makes the
     # hyper provider the session's backend (hard cutover, no Bedrock
