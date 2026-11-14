@@ -143,6 +143,13 @@ resource "helm_release" "cosell" {
     name  = "serviceAccount.name"
     value = local.runner_sa_name
   }
+  # IRSA: the pod-identity webhook injects the runner credentials only
+  # when the ServiceAccount carries this annotation — the missing link
+  # that left the first runner-identity dispatch unauthenticated.
+  set {
+    name  = "serviceAccount.annotations.eks\\.amazonaws\\.com/role-arn"
+    value = aws_iam_role.runner.arn
+  }
   set {
     name  = "serviceAccountName"
     value = local.runner_sa_name
