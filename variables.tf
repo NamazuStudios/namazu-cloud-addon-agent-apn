@@ -33,7 +33,18 @@ variable "agent_apn" {
     # applies to the Bedrock invocation policy) so a held tenant's identity
     # can assume nothing; the co-sell role itself survives (its ARN is
     # handed to the chart and must stay stable across a hold).
-    suspended = optional(bool, false)
+    suspended = optional(bool)
+
+    # Charm Hyper (the core chart's agent.hyper.*): enabled=true makes the
+    # hyper provider the session's backend (hard cutover, no Bedrock
+    # fallback) with the routing model prism as the default; the key comes
+    # from the namespace's charm-hyper Secret — written by the tenant
+    # stack, NEVER by this addon (the chart only references it, and helm
+    # fails at render if the name is set empty while enabled).
+    hyper_enabled             = optional(bool, false)
+    hyper_api_key_secret_name = optional(string, "charm-hyper")
+    hyper_model               = optional(string, "prism")
+    suspended                 = optional(bool, false)
   })
 
   default = {

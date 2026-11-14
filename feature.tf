@@ -95,6 +95,21 @@ resource "helm_release" "cosell" {
     name  = "aws.sourceIdentity"
     value = local.apn.source_identity
   }
+  # Charm Hyper (the core chart's agent.hyper.*): the contract decides;
+  # the namespace's charm-hyper Secret supplies the key (chart-rendered
+  # secretKeyRef — the addon never touches the secret).
+  set {
+    name  = "agent.hyper.enabled"
+    value = local.apn.hyper_enabled ? "true" : "false"
+  }
+  set {
+    name  = "agent.hyper.apiKeySecretName"
+    value = local.apn.hyper_api_key_secret_name
+  }
+  set {
+    name  = "agent.hyper.model"
+    value = local.apn.hyper_model
+  }
   dynamic "set" {
     for_each = local.apn.external_id != null ? [local.apn.external_id] : []
     content {
