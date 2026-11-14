@@ -136,19 +136,74 @@ resource "helm_release" "cosell" {
     }
   }
   set {
+    name  = "serviceAccount.create"
+    value = "true"
+  }
+  set {
+    name  = "serviceAccount.name"
+    value = local.runner_sa_name
+  }
+  set {
     name  = "serviceAccountName"
-    value = var.agent_service_account_name
+    value = local.runner_sa_name
   }
 
 }
 
 
 
+# ---- the dedicated runner identity ----------------------------------------
+# The pod's ServiceAccount + IAM role: NOTHING but assume the co-sell role
+# (the contract's consume_role_arn — same-account or cross-account) and
+# pull the agent images. The shared bedrock-irsa workspace role keeps only
+# its platform duties; the co-sell grants moved here.
+locals {
+  runner_sa_name      = "cosell-agent"
+  runner_role_name    = "cosell-runner-${local.addon_namespace}"
+  cluster_oidc_issuer = data.aws_eks_cluster.cluster.identity[0].oidc[0].issuer
+  oidc_provider_arn   = "arn:aws:iam::${data.aws_caller_identity.current.account_id}:oidc-provider/${replace(local.cluster_oidc_issuer, "https://", "")}"
+}
+
+data "aws_caller_identity" "current" {}
+
+# IRSA trust for the runner ServiceAccount (the chart renders it —
+# serviceAccount.create=true — in the tenant namespace).
+data "aws_iam_policy_document" "runner_trust" {
+  statement {
+    effect  = "Allow"
+    actions = ["sts:AssumeRoleWithWebIdentity"]
+    principals {
+      type        = "Federated"
+      identifiers = [local.oidc_provider_arn]
+    }
+    condition {
+      test     = "StringEquals"
+      variable = "sts.amazonaws.com:aud"
+      values   = ["sts.amazonaws.com"]
+    }
+    condition {
+      test     = "StringEquals"
+      variable = "${local.cluster_oidc_issuer}:sub"
+      values   = ["system:serviceaccount:${local.addon_namespace}:${local.runner_sa_name}"]
+    }
+  }
+}
+
+resource "aws_iam_role" "runner" {
+  name               = local.runner_role_name
+  assume_role_policy = data.aws_iam_policy_document.runner_trust.json
+}
+
 # The outbound assume permission — the tenant-account equivalent of
 # namazu-main-aws-terraform's CosellingAgentOutboundAssumption policy, but
 # scoped to the ONE role this tenant's agent actually assumes (the hosting
 # account's version wildcards the role namespace because the customer
 # account varies; here the target is known, so it is exact).
+#
+# Both policies attach to the DEDICATED runner role (cosell-runner-<ns>),
+# NOT the shared bedrock-irsa role: the runner identity can do nothing but
+# assume the co-sell role (same- or cross-account) and pull the agent
+# images. The shared workspace role keeps its platform duties untouched.
 #
 # Detaches while the tenant is billing-suspended (the baseline folds
 # `suspended` into the agent_apn map): a held tenant's identity can assume
@@ -158,7 +213,7 @@ resource "aws_iam_role_policy" "coselling_outbound" {
   count = local.enabled && !local.apn.suspended && local.cosell_role_arn != null ? 1 : 0
 
   name = "CosellingAgentOutboundAssumption"
-  role = local.agent_role_name
+  role = aws_iam_role.runner.name
 
   policy = jsonencode({
     Version = "2012-10-17"
@@ -187,7 +242,7 @@ resource "aws_iam_role_policy" "ecr_pull" {
   count = local.enabled && !local.apn.suspended && local.apn.ecr_enabled ? 1 : 0
 
   name = "CosellingAgentEcrPull"
-  role = local.agent_role_name
+  role = aws_iam_role.runner.name
 
   policy = jsonencode({
     Version = "2012-10-17"
