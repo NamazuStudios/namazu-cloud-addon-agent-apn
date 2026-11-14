@@ -110,6 +110,17 @@ resource "helm_release" "cosell" {
     name  = "agent.hyper.model"
     value = local.apn.hyper_model
   }
+  # The picker whitelist as a helm set_list (the chart value is a list;
+  # `set` cannot carry one). Omitted when the contract doesn't pin —
+  # which renders NO models declaration and leaves every id unavailable
+  # to opencode, so real deployments should always pin the verified list.
+  dynamic "set_list" {
+    for_each = local.apn.hyper_models != null ? [local.apn.hyper_models] : []
+    content {
+      name  = "agent.hyper.models"
+      value = set_list.value
+    }
+  }
   dynamic "set" {
     for_each = local.apn.external_id != null ? [local.apn.external_id] : []
     content {

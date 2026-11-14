@@ -44,6 +44,12 @@ variable "agent_apn" {
     hyper_enabled             = optional(bool, false)
     hyper_api_key_secret_name = optional(string, "charm-hyper")
     hyper_model               = optional(string, "prism")
+    # The picker whitelist — re-declares the ids in opencode.json so the
+    # provider's models EXIST to opencode (a custom openai-compatible
+    # provider has no model specs otherwise; without it even the default
+    # prism id is unavailable and the server crash-loops). Verify against
+    # GET /v1/models with the workspace token before adding ids.
+    hyper_models = optional(list(string))
   })
 
   default = {
