@@ -184,8 +184,12 @@ data "aws_iam_policy_document" "runner_trust" {
       identifiers = [local.oidc_provider_arn]
     }
     condition {
-      test     = "StringEquals"
-      variable = "sts.amazonaws.com:aud"
+      test = "StringEquals"
+      # The audience condition key is <oidc-issuer-host>:aud — the
+      # same form the baseline's bedrock-irsa trust uses. My first draft
+      # wrote "sts.amazonaws.com:aud", which matches no context key and
+      # denied every AssumeRoleWithWebIdentity.
+      variable = "${local.cluster_oidc_issuer}:aud"
       values   = ["sts.amazonaws.com"]
     }
     condition {
