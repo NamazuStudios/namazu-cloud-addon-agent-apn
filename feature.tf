@@ -168,7 +168,11 @@ locals {
   runner_sa_name      = "cosell-agent"
   runner_role_name    = "cosell-runner-${local.addon_namespace}"
   cluster_oidc_issuer = data.aws_eks_cluster.cluster.identity[0].oidc[0].issuer
-  oidc_provider_arn   = "arn:aws:iam::${data.aws_caller_identity.current.account_id}:oidc-provider/${replace(local.cluster_oidc_issuer, "https://", "")}"
+  # The condition-key form is the issuer WITHOUT the scheme — the working
+  # bedrock-irsa trusts key on "oidc.eks…:sub", and my first draft carried
+  # the "https://" prefix into the key, matching no context key.
+  oidc_host         = replace(data.aws_eks_cluster.cluster.identity[0].oidc[0].issuer, "https://", "")
+  oidc_provider_arn = "arn:aws:iam::${data.aws_caller_identity.current.account_id}:oidc-provider/${local.oidc_host}"
 }
 
 data "aws_caller_identity" "current" {}
@@ -189,12 +193,12 @@ data "aws_iam_policy_document" "runner_trust" {
       # same form the baseline's bedrock-irsa trust uses. My first draft
       # wrote "sts.amazonaws.com:aud", which matches no context key and
       # denied every AssumeRoleWithWebIdentity.
-      variable = "${local.cluster_oidc_issuer}:aud"
+      variable = "${local.oidc_host}:aud"
       values   = ["sts.amazonaws.com"]
     }
     condition {
       test     = "StringEquals"
-      variable = "${local.cluster_oidc_issuer}:sub"
+      variable = "${local.oidc_host}:sub"
       values   = ["system:serviceaccount:${local.addon_namespace}:${local.runner_sa_name}"]
     }
   }
