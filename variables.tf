@@ -44,7 +44,6 @@ variable "agent_apn" {
     hyper_enabled             = optional(bool, false)
     hyper_api_key_secret_name = optional(string, "charm-hyper")
     hyper_model               = optional(string, "prism")
-    suspended                 = optional(bool, false)
   })
 
   default = {
