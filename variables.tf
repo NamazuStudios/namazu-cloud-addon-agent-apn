@@ -16,12 +16,10 @@ variable "agent_apn" {
     external_id      = optional(string)
     catalog          = optional(string)
     resource_scope   = optional(string, "*")
-    # FALSE by default: the runner identity is assume-only. Image pulls
-    # ride the kubelet's node credentials (EKS standard) — the pod-side
-    # ECR grant existed only for the runtime helm-install flow
-    # (instanceChart), which the co-selling agent never runs. Re-enable
-    # per contract only for a deployment that pulls from inside the pod.
-    ecr_enabled          = optional(bool, false)
+    # TRUE by default: the agent needs the ECR read to fetch its code —
+    # image pulls authenticate with the pod's IRSA identity, so the ECR
+    # grant on this role is required (verified 2026-11-16).
+    ecr_enabled          = optional(bool, true)
     ecr_registry_account = optional(string, "308044622771")
 
     # The chart install (terraform-managed): when the addon is enabled and
