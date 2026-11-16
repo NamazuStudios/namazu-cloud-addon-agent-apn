@@ -13,9 +13,18 @@ variable "agent_apn" {
     enabled          = bool
     consume_role_arn = optional(string)
     source_identity  = optional(string)
-    external_id      = optional(string)
-    catalog          = optional(string)
-    resource_scope   = optional(string, "*")
+    # An ARBITRARY string the operator assigns to this workspace for
+    # TRACKING: it becomes the human-readable half of the runner
+    # principal's name (cosell-runner-<user_name>-<workspace_id>), so it
+    # must comply with IAM role-name rules (letters, digits, and
+    # _+=,.@- only; it is truncated to 20 characters for the 64-char
+    # IAM budget). It is a tracking label, not an authentication fact —
+    # the sts:SourceIdentity (source_identity) is what actions are
+    # attributed to. Falls back to source_identity when omitted.
+    user_name      = optional(string)
+    external_id    = optional(string)
+    catalog        = optional(string)
+    resource_scope = optional(string, "*")
     # TRUE by default: the agent needs the ECR read to fetch its code —
     # image pulls authenticate with the pod's IRSA identity, so the ECR
     # grant on this role is required (verified 2026-11-16).

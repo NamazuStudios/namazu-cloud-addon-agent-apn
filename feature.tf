@@ -169,8 +169,13 @@ locals {
   # Human-readable + workspace-qualified: the person comes from the
   # contract's source_identity (truncated for IAM's 64-char budget),
   # the workspace id keeps it unique per agent workspace.
-  runner_role_name    = "cosell-runner-${substr(coalesce(local.apn.source_identity, "agent"), 0, 20)}-${local.addon_namespace}"
-  cluster_oidc_issuer = data.aws_eks_cluster.cluster.identity[0].oidc[0].issuer
+  # The user name assigned to this workspace (the contract's user_name —
+  # an arbitrary IAM-compliant tracking string; falls back to
+  # source_identity), truncated for IAM's 64-char budget, the workspace
+  # id keeping the principal unique per agent workspace.
+  runner_principal_name = substr(coalesce(local.apn.user_name, local.apn.source_identity, "agent"), 0, 20)
+  runner_role_name      = "cosell-runner-${local.runner_principal_name}-${local.addon_namespace}"
+  cluster_oidc_issuer   = data.aws_eks_cluster.cluster.identity[0].oidc[0].issuer
   # The condition-key form is the issuer WITHOUT the scheme — the working
   # bedrock-irsa trusts key on "oidc.eks…:sub", and my first draft carried
   # the "https://" prefix into the key, matching no context key.
