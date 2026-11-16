@@ -150,6 +150,12 @@ resource "helm_release" "cosell" {
     name  = "serviceAccount.annotations.eks\\.amazonaws\\.com/role-arn"
     value = aws_iam_role.runner.arn
   }
+  # The deployment's IAM principal, rendered into the agent's description:
+  # the operator's AWS administrator authorizes exactly this ARN.
+  set {
+    name  = "principalArn"
+    value = aws_iam_role.runner.arn
+  }
   set {
     name  = "serviceAccountName"
     value = local.runner_sa_name
