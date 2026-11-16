@@ -165,8 +165,11 @@ resource "helm_release" "cosell" {
 # pull the agent images. The shared bedrock-irsa workspace role keeps only
 # its platform duties; the co-sell grants moved here.
 locals {
-  runner_sa_name      = "cosell-agent"
-  runner_role_name    = "cosell-runner-${local.addon_namespace}"
+  runner_sa_name = "cosell-agent"
+  # Human-readable + workspace-qualified: the person comes from the
+  # contract's source_identity (truncated for IAM's 64-char budget),
+  # the workspace id keeps it unique per agent workspace.
+  runner_role_name    = "cosell-runner-${substr(coalesce(local.apn.source_identity, "agent"), 0, 20)}-${local.addon_namespace}"
   cluster_oidc_issuer = data.aws_eks_cluster.cluster.identity[0].oidc[0].issuer
   # The condition-key form is the issuer WITHOUT the scheme — the working
   # bedrock-irsa trusts key on "oidc.eks…:sub", and my first draft carried
@@ -206,6 +209,7 @@ data "aws_iam_policy_document" "runner_trust" {
 
 resource "aws_iam_role" "runner" {
   name               = local.runner_role_name
+  description        = "Namazu APN co-selling agent runner (workspace ${local.addon_namespace}). THE PRINCIPAL REMOTE CO-SELL STACKS TRUST: give this ARN to the remote stack's AgentRoleArns. It assumes the co-sell role named by this deployment's contract (same- or cross-account) presenting the deployment's sts:SourceIdentity. ARN: arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/${local.runner_role_name}"
   assume_role_policy = data.aws_iam_policy_document.runner_trust.json
 }
 
