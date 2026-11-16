@@ -8,7 +8,7 @@
 # accidental install wires nothing.
 
 variable "agent_apn" {
-  description = "Per-tenant co-selling agent (namazu-agent-apn) AWS wiring. enabled=false creates nothing. consume_role_arn points at the co-sell role in the target account - created from NamazuStudios/namazu-apn-cloudformation by whoever owns that account. The addon NEVER creates the role (the account-wide name collision just proved why): it attaches the outbound-assume + ECR policies to the tenant's agent role and installs the chart. source_identity is the sts:SourceIdentity every assume must present (it must equal the role's AuthorizedUser tag — that match is what makes every action attributable in CloudTrail). external_id is optional additional confused-deputy protection (sts:ExternalId pin). catalog pins the role's partnercentral permission policy to one Partner Central catalog (Sandbox = AWS's isolated test catalog, AWS = production deals); empty = no pin."
+  description = "Per-tenant co-selling agent (namazu-agent-apn) AWS wiring. enabled=false creates nothing. consume_role_arn points at the co-sell role in the target account - created from NamazuStudios/namazu-apn-cloudformation by whoever owns that account. The addon NEVER creates the role (the account-wide name collision just proved why): it attaches the outbound-assume + ECR policies to the tenant's agent role and installs the chart. source_identity is the sts:SourceIdentity every assume must present (it must equal the role's AuthorizedUser tag — that match is what makes every action attributable in CloudTrail). external_id is REQUIRED confused-deputy protection (sts:ExternalId pin) — the co-sell role's trust always carries the condition, so both sides must carry the same value. catalog pins the role's partnercentral permission policy to one Partner Central catalog (Sandbox = AWS's isolated test catalog, AWS = production deals); empty = no pin."
   type = object({
     enabled          = bool
     consume_role_arn = optional(string)
@@ -66,6 +66,15 @@ variable "agent_apn" {
 
   default = {
     enabled = false
+  }
+
+  validation {
+    # The ExternalId is REQUIRED (the co-sell role's trust always carries
+    # the sts:ExternalId condition — the operator's fail-closed posture):
+    # a deployment that names a target role must also carry the matching
+    # secret, or every assume is denied.
+    condition     = var.agent_apn.consume_role_arn == null || var.agent_apn.external_id != null
+    error_message = "agent_apn.external_id is required when consume_role_arn is set — the co-sell role's trust carries an sts:ExternalId condition, and the agent must present the same value (share it with the operator of that stack via a support ticket)."
   }
 }
 
