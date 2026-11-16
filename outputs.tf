@@ -16,9 +16,14 @@ output "external_id" {
   value       = local.enabled ? local.apn.external_id : null
 }
 
+output "runner_role_arn" {
+  description = "The dedicated per-workspace runner role — the principal remote accounts trust to let this workspace's agent assume their co-sell role. Give this ARN to the remote stack's AgentRoleArns. Its only grants: sts:AssumeRole + SetSourceIdentity on the contract's consume_role_arn, and agent-image ECR reads."
+  value       = local.enabled ? aws_iam_role.runner.arn : null
+}
+
 output "outbound_policy_role" {
-  description = "The agent IRSA role the outbound assume + ECR permissions were attached to (by name, for audit/inspection)."
-  value       = local.enabled ? local.agent_role_name : null
+  description = "The agent IRSA role the outbound assume + ECR permissions are attached to (the dedicated runner role, by name, for audit/inspection)."
+  value       = local.enabled ? aws_iam_role.runner.name : null
 }
 
 output "agent_namespace" {
