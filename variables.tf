@@ -10,13 +10,18 @@
 variable "agent_apn" {
   description = "Per-tenant co-selling agent (namazu-agent-apn) AWS wiring. enabled=false creates nothing. consume_role_arn points at the co-sell role in the target account - created from NamazuStudios/namazu-apn-cloudformation by whoever owns that account. The addon NEVER creates the role (the account-wide name collision just proved why): it attaches the outbound-assume + ECR policies to the tenant's agent role and installs the chart. source_identity is the sts:SourceIdentity every assume must present (it must equal the role's AuthorizedUser tag — that match is what makes every action attributable in CloudTrail). external_id is optional additional confused-deputy protection (sts:ExternalId pin). catalog pins the role's partnercentral permission policy to one Partner Central catalog (Sandbox = AWS's isolated test catalog, AWS = production deals); empty = no pin."
   type = object({
-    enabled              = bool
-    consume_role_arn     = optional(string)
-    source_identity      = optional(string)
-    external_id          = optional(string)
-    catalog              = optional(string)
-    resource_scope       = optional(string, "*")
-    ecr_enabled          = optional(bool, true)
+    enabled          = bool
+    consume_role_arn = optional(string)
+    source_identity  = optional(string)
+    external_id      = optional(string)
+    catalog          = optional(string)
+    resource_scope   = optional(string, "*")
+    # FALSE by default: the runner identity is assume-only. Image pulls
+    # ride the kubelet's node credentials (EKS standard) — the pod-side
+    # ECR grant existed only for the runtime helm-install flow
+    # (instanceChart), which the co-selling agent never runs. Re-enable
+    # per contract only for a deployment that pulls from inside the pod.
+    ecr_enabled          = optional(bool, false)
     ecr_registry_account = optional(string, "308044622771")
 
     # The chart install (terraform-managed): when the addon is enabled and
