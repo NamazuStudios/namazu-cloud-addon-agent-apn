@@ -15,7 +15,7 @@ variable "agent_apn" {
     source_identity  = optional(string)
     # An ARBITRARY string the operator assigns to this workspace for
     # TRACKING: it becomes the human-readable half of the runner
-    # principal's name (cosell-runner-<user_name>-<workspace_id>), so it
+    # principal's name (cosell-agent-<user_name>-<workspace_id>), so it
     # must comply with IAM role-name rules (letters, digits, and
     # _+=,.@- only; it is truncated to 20 characters for the 64-char
     # IAM budget). It is a tracking label, not an authentication fact —

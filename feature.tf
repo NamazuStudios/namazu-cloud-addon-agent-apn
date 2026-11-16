@@ -180,7 +180,7 @@ locals {
   # source_identity), truncated for IAM's 64-char budget, the workspace
   # id keeping the principal unique per agent workspace.
   runner_principal_name = substr(coalesce(local.apn.user_name, local.apn.source_identity, "agent"), 0, 20)
-  runner_role_name      = "cosell-runner-${local.runner_principal_name}-${local.addon_namespace}"
+  runner_role_name      = "cosell-agent-${local.runner_principal_name}-${local.addon_namespace}"
   cluster_oidc_issuer   = data.aws_eks_cluster.cluster.identity[0].oidc[0].issuer
   # The condition-key form is the issuer WITHOUT the scheme — the working
   # bedrock-irsa trusts key on "oidc.eks…:sub", and my first draft carried
@@ -230,7 +230,7 @@ resource "aws_iam_role" "runner" {
 # account's version wildcards the role namespace because the customer
 # account varies; here the target is known, so it is exact).
 #
-# Both policies attach to the DEDICATED runner role (cosell-runner-<ns>),
+# Both policies attach to the DEDICATED runner role (cosell-agent-<ns>),
 # NOT the shared bedrock-irsa role: the runner identity can do nothing but
 # assume the co-sell role (same- or cross-account) and pull the agent
 # images. The shared workspace role keeps its platform duties untouched.
